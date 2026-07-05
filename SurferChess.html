@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Surfer2 · 井字棋</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, 'Segoe UI', monospace;
+      background: #0a0f1e;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #e2e8f0;
+    }
+    .chess-container {
+      max-width: 600px;
+      width: 100%;
+      background: #0e1427;
+      border-radius: 32px;
+      padding: 30px 24px;
+      border: 1px solid #2d3e5f;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    .chess-container h2 {
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 360px;
+      margin: 16px auto;
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 20px;
+      aspect-ratio: 1/1;
+    }
+    .game-cell {
+      background: #0f172a;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      aspect-ratio: 1/1;
+      transition: background 0.15s, transform 0.1s;
+      color: #e2e8f0;
+      border: 1px solid #2d3e5f;
+      user-select: none;
+    }
+    .game-cell:hover:not(.taken) {
+      background: #1e2a3e;
+    }
+    .game-cell.taken {
+      cursor: default;
+    }
+    .game-cell.win-cell {
+      background: #2d5f3e;
+      border-color: #22c55e;
+      box-shadow: 0 0 12px rgba(34,197,94,0.3);
+    }
+    .status-area {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 16px 0 8px;
+      font-size: 1.1rem;
+    }
+    #chessStatus {
+      padding: 8px 20px;
+      background: #1e293b;
+      border-radius: 40px;
+      border: 1px solid #2d3e5f;
+      min-width: 120px;
+    }
+    .go-btn {
+      background: #1f6392;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 40px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .go-btn:hover { background: #2a7ab0; }
+    .go-btn.secondary { background: #475569; }
+    .go-btn.secondary:hover { background: #5a6a7e; }
+    .score-board {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 12px 0 8px;
+      font-size: 0.9rem;
+      color: #87b9ff;
+    }
+    .score-board span { background: #1e293b; padding: 4px 16px; border-radius: 40px; }
+    .score-board .score-num { font-weight: 700; color: #e2e8f0; }
+    .status-bar {
+      margin-top: 18px;
+      font-size: 0.75rem;
+      color: #475569;
+      border-top: 1px solid #1e293b;
+      padding-top: 12px;
+    }
+    @media (max-width: 480px) {
+      .game-cell { font-size: 2.4rem; }
+      .chess-container { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="chess-container">
+  <h2>♟️ Surfer2 · 井字棋</h2>
+  <div class="score-board">
+    <span>🧑 玩家 <span class="score-num" id="playerScore">0</span></span>
+    <span>🤖 AI <span class="score-num" id="aiScore">0</span></span>
+    <span>🤝 平局 <span class="score-num" id="drawScore">0</span></span>
+  </div>
+  <div id="chessBoard" class="game-board"></div>
+  <div class="status-area">
+    <span id="chessStatus">你的回合 (X)</span>
+    <button id="resetChessBtn" class="go-btn">🔄 新对局</button>
+    <button id="resetScoreBtn" class="go-btn secondary">📊 重置比分</button>
+  </div>
+  <div class="status-bar">Surfer2 Chess · 人机对战 (随机AI)</div>
+</div>
+<script>
+  (function(){
+    // ---- 状态 ----
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let gameActive = true;
+    let currentTurn = 'X';    // X = 玩家, O = AI
+    let winner = null;        // 'X', 'O', 'tie'
+    let playerScore = 0;
+    let aiScore = 0;
+    let drawScore = 0;
+
+    // ---- DOM refs ----
+    const boardEl = document.getElementById('chessBoard');
+    const statusEl = document.getElementById('chessStatus');
+    const playerScoreEl = document.getElementById('playerScore');
+    const aiScoreEl = document.getElementById('aiScore');
+    const drawScoreEl = document.getElementById('drawScore');
+    const resetBtn = document.getElementById('resetChessBtn');
+    const resetScoreBtn = document.getElementById('resetScoreBtn');
+
+    // ---- 辅助 ----
+    function updateScoreUI() {
+      playerScoreEl.textContent = playerScore;
+      aiScoreEl.textContent = aiScore;
+      drawScoreEl.textContent = drawScore;
+    }
+
+    // ---- 检查胜负 ----
+    function checkWinner(boardArr) {
+      const lines = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let line of lines) {
+        const [a,b,c] = line;
+        if (boardArr[a] && boardArr[a] === boardArr[b] && boardArr[a] === boardArr[c]) {
+          return { winner: boardArr[a], line: line };
+        }
+      }
+      if (boardArr.every(cell => cell !== '')) {
+        return { winner: 'tie', line: null };
+      }
+      return { winner: null, line: null };
+    }
+
+    // ---- 结束游戏 ----
+    function endGame(result, winLine = null) {
+      gameActive = false;
+      winner = result;
+
+      if (result === 'X') {
+        playerScore++;
+        statusEl.textContent = '🎉 你赢了！';
+      } else if (result === 'O') {
+        aiScore++;
+        statusEl.textContent = '😅 AI 赢了...';
+      } else if (result === 'tie') {
+        drawScore++;
+        statusEl.textContent = '🤝 平局！';
+      }
+      updateScoreUI();
+
+      // 高亮获胜线
+      if (winLine) {
+        const cells = document.querySelectorAll('.game-cell');
+        winLine.forEach(idx => {
+          cells[idx].classList.add('win-cell');
+        });
+      }
+
+      // 所有格子标记为 taken
+      document.querySelectorAll('.game-cell').forEach(el => el.classList.add('taken'));
+    }
+
+    // ---- AI 走棋 (随机) ----
+    function aiMove() {
+      if (!gameActive || currentTurn !== 'O' || winner) return;
+
+      // 获取空位
+      const emptyIndices = [];
+      board.forEach((cell, idx) => { if (cell === '') emptyIndices.push(idx); });
+      if (emptyIndices.length === 0) {
+        // 平局检测 (理论上不会发生, 因为调用前会检查)
+        const result = checkWinner(board);
+        if (result.winner === 'tie') {
+          endGame('tie');
+        }
+        return;
+      }
+
+      // 随机选择一个空位
+      const randomIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      board[randomIdx] = 'O';
+
+      // 重新绘制
+      renderBoard();
+
+      // 检查胜负
+      const result = checkWinner(board);
+      if (result.winner) {
+        endGame(result.winner, result.line);
+        return;
+      }
+
+      // 切换回合到玩家
+      currentTurn = 'X';
+      statusEl.textContent = '你的回合 (X)';
+      gameActive = true;
+      renderBoard(); // 更新交互状态
+    }
+
+    // ---- 玩家走棋 ----
+    function playerMove(index) {
+      if (!gameActive || currentTurn !== 'X' || board[index] !== '' || winner) return;
+
+      board[index] = 'X';
+      renderBoard();
+
+      // 检查胜负
+      const result = checkWinner(board);
+      if (result.winner) {
+        endGame(result.winner, result.line);
+        return;
+      }
+
+      // 切换回合到 AI
+      currentTurn = 'O';
+      statusEl.textContent = 'AI 思考中 ...';
+      gameActive = true;
+      renderBoard();
+
+      // 延迟 AI 走棋 (模拟思考)
+      setTimeout(() => {
+        aiMove();
+      }, 300);
+    }
+
+    // ---- 渲染棋盘 ----
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'game-cell';
+        if (board[i] !== '') cell.classList.add('taken');
+        cell.textContent = board[i];
+        cell.dataset.index = i;
+
+        // 如果是玩家的回合且格子为空，绑定点击事件
+        if (gameActive && currentTurn === 'X' && board[i] === '' && !winner) {
+          cell.style.cursor = 'pointer';
+          cell.addEventListener('click', function(e) {
+            const idx = parseInt(this.dataset.index);
+            playerMove(idx);
+          });
+        } else {
+          cell.style.cursor = 'default';
+        }
+
+        boardEl.appendChild(cell);
+      }
+
+      // 如果游戏结束但尚未显示获胜线, 但已经通过 endGame 高亮处理
+      // 额外处理: 如果 winner 存在但没高亮 (比如平局), 不用高亮
+    }
+
+    // ---- 重置对局 (不清除比分) ----
+    function resetGame() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      gameActive = true;
+      currentTurn = 'X';
+      winner = null;
+      statusEl.textContent = '你的回合 (X)';
+      renderBoard();
+    }
+
+    // ---- 重置比分 ----
+    function resetScore() {
+      playerScore = 0;
+      aiScore = 0;
+      drawScore = 0;
+      updateScoreUI();
+      resetGame();
+    }
+
+    // ---- 初始化 ----
+    function init() {
+      resetGame();
+      updateScoreUI();
+      // 绑定按钮事件
+      resetBtn.addEventListener('click', resetGame);
+      resetScoreBtn.addEventListener('click', resetScore);
+    }
+
+    init();
+    console.log('Surfer2 Chess · 独立版已加载 (随机AI)');
+  })();
+</script>
+</body>
+      </html>
