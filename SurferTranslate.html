@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Surfer2 · 翻译器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, 'Segoe UI', monospace;
+      background: #0a0f1e;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: #e2e8f0;
+    }
+    .translate-container {
+      max-width: 900px;
+      width: 100%;
+      background: #0e1427;
+      border-radius: 32px;
+      padding: 30px 24px;
+      border: 1px solid #2d3e5f;
+      box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+      transition: background 0.2s;
+    }
+    .translate-container h2 {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .translate-box {
+      background: #1e293b;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid #2d3e5f;
+    }
+    .translate-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .translate-row select {
+      padding: 10px 16px;
+      border-radius: 40px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      cursor: pointer;
+      flex: 1 1 120px;
+    }
+    .translate-row .arrow {
+      font-size: 1.4rem;
+      color: #87b9ff;
+      padding: 0 4px;
+    }
+    .translate-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 16px;
+      border-radius: 16px;
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      resize: vertical;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    .translate-textarea:focus {
+      outline: 2px solid #3b82f6;
+      border-color: transparent;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: center;
+    }
+    .go-btn {
+      background: #1f6392;
+      border: none;
+      padding: 10px 28px;
+      border-radius: 40px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .go-btn:hover { background: #2a7ab0; }
+    .go-btn.secondary { background: #475569; }
+    .go-btn.secondary:hover { background: #5a6a7e; }
+    .translate-result {
+      margin-top: 20px;
+      padding: 16px 20px;
+      background: #0f172a;
+      border-radius: 16px;
+      border-left: 4px solid #3b82f6;
+      min-height: 60px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .translate-result:empty::before {
+      content: "翻译结果将显示在这里";
+      color: #475569;
+      font-style: italic;
+    }
+    .status-bar {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      color: #87b9ff;
+      text-align: right;
+      border-top: 1px solid #1e293b;
+      padding-top: 12px;
+    }
+    @media (max-width: 600px) {
+      .translate-container { padding: 16px; }
+      .translate-box { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="translate-container">
+  <h2>🌐 Surfer2 · 翻译器</h2>
+  <div class="translate-box">
+    <div class="translate-row">
+      <select id="transSrc">
+        <option value="auto">自动检测</option>
+        <option value="zh">中文</option>
+        <option value="en">英语</option>
+        <option value="ja">日语</option>
+        <option value="fr">法语</option>
+        <option value="de">德语</option>
+        <option value="es">西班牙语</option>
+      </select>
+      <span class="arrow">→</span>
+      <select id="transTgt">
+        <option value="zh">中文</option>
+        <option value="en" selected>英语</option>
+        <option value="ja">日语</option>
+        <option value="fr">法语</option>
+        <option value="de">德语</option>
+        <option value="es">西班牙语</option>
+      </select>
+    </div>
+    <textarea id="transSrcText" class="translate-textarea" placeholder="输入要翻译的文本 ..."></textarea>
+    <div class="action-row">
+      <button id="transBtn" class="go-btn">✨ 翻译</button>
+      <button id="swapLangBtn" class="go-btn secondary">⇄ 互换</button>
+      <button id="clearBtn" class="go-btn secondary">清空</button>
+    </div>
+    <div id="transResult" class="translate-result"></div>
+  </div>
+  <div class="status-bar">Surfer2 Translate · 基于 MyMemory API</div>
+</div>
+<script>
+  (function(){
+    // ---- DOM refs ----
+    const srcSelect = document.getElementById('transSrc');
+    const tgtSelect = document.getElementById('transTgt');
+    const srcText = document.getElementById('transSrcText');
+    const resultDiv = document.getElementById('transResult');
+    const transBtn = document.getElementById('transBtn');
+    const swapBtn = document.getElementById('swapLangBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // ---- 语言检测（简单） ----
+    function detectLanguage(text) {
+      if (!text) return 'en';
+      if (/[\u4e00-\u9fa5]/.test(text)) return 'zh';
+      if (/[ぁ-んァ-ン]/.test(text)) return 'ja';
+      if (/[áéíóúüñ]/.test(text)) return 'es';
+      if (/[äöüß]/.test(text)) return 'de';
+      if (/[àâçéèêëîïôù]/.test(text)) return 'fr';
+      return 'en';
+    }
+
+    // ---- 翻译核心 ----
+    async function performTranslate() {
+      const text = srcText.value.trim();
+      if (!text) {
+        resultDiv.textContent = '⚠️ 请输入要翻译的文本';
+        return;
+      }
+
+      let src = srcSelect.value;
+      const tgt = tgtSelect.value;
+
+      // 自动检测
+      if (src === 'auto') {
+        src = detectLanguage(text);
+        // 如果检测出的语言和目标语言相同，强制设为 'en' 避免空翻译
+        if (src === tgt) {
+          src = (tgt === 'en') ? 'zh' : 'en';
+        }
+      }
+
+      // 如果源语言和目标语言相同，直接显示原文
+      if (src === tgt) {
+        resultDiv.textContent = text;
+        return;
+      }
+
+      try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.responseData && data.responseData.translatedText) {
+          resultDiv.textContent = data.responseData.translatedText;
+          // 如果有 match 信息，可以显示在下方，但这里简洁处理
+        } else if (data.responseStatus === 403) {
+          resultDiv.textContent = '⚠️ 翻译请求被拒绝 (配额或限制)';
+        } else {
+          resultDiv.textContent = '⚠️ 翻译失败，请稍后重试';
+        }
+      } catch (error) {
+        resultDiv.textContent = '⚠️ 网络错误，请检查连接后重试';
+        console.warn('Translate error:', error);
+      }
+    }
+
+    // ---- 互换语言 ----
+    function swapLanguages() {
+      const srcVal = srcSelect.value;
+      const tgtVal = tgtSelect.value;
+      if (srcVal === 'auto') {
+        // 如果源是自动，互换时把源设为目标，目标设为自动检测
+        srcSelect.value = tgtVal;
+        tgtSelect.value = 'auto';
+      } else {
+        srcSelect.value = tgtVal;
+        tgtSelect.value = srcVal;
+      }
+      // 触发翻译更新 (如果用户希望自动翻译, 但这里不自动执行, 用户点击翻译)
+    }
+
+    // ---- 清空 ----
+    function clearAll() {
+      srcText.value = '';
+      resultDiv.textContent = '';
+      srcText.focus();
+    }
+
+    // ---- 绑定事件 ----
+    transBtn.addEventListener('click', performTranslate);
+    swapBtn.addEventListener('click', swapLanguages);
+    clearBtn.addEventListener('click', clearAll);
+
+    // 支持 Ctrl+Enter 快捷键翻译
+    srcText.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        performTranslate();
+      }
+    });
+
+    // 初始占位提示
+    resultDiv.textContent = '';
+    console.log('Surfer2 Translate · 独立版已加载');
+  })();
+</script>
+</body>
+</html>
