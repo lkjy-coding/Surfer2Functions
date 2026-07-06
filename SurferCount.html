@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Surfer2 · 计算器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, 'Segoe UI', monospace;
+            background: #0a0f1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        .calc-container {
+            width: 100%;
+            max-width: 500px;
+            background: #0e1427;
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid #2d3e5f;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.5);
+        }
+        .calc-container h2 {
+            font-size: 1.6rem;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .calc-gui {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 20px;
+        }
+        .calc-display {
+            background: #0f172a;
+            border-radius: 20px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 2.2rem;
+            text-align: right;
+            min-height: 90px;
+            word-break: break-all;
+            border: 1px solid #2d3e5f;
+            color: #e2e8f0;
+            line-height: 1.3;
+        }
+        .calc-display .result-area {
+            font-size: 1rem;
+            color: #87b9ff;
+            min-height: 1.5rem;
+            margin-top: 4px;
+        }
+        .calc-gui-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .calc-gui-btn {
+            flex: 1;
+            padding: 16px 8px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            background: #2d3748;
+            color: #e2e8f0;
+            transition: background 0.1s, transform 0.05s;
+            user-select: none;
+        }
+        .calc-gui-btn:active { transform: scale(0.96); }
+        .calc-gui-btn.operator { background: #3b82f6; color: #fff; }
+        .calc-gui-btn.equals { background: #22c55e; color: #fff; }
+        .calc-gui-btn.clear { background: #ef4444; color: #fff; }
+        .calc-gui-btn.func { background: #8b5cf6; color: #fff; }
+        .calc-gui-btn.span-2 { flex: 2; }
+        .status-bar {
+            margin-top: 18px;
+            font-size: 0.75rem;
+            color: #475569;
+            border-top: 1px solid #1e293b;
+            padding-top: 12px;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .calc-container { padding: 16px; }
+            .calc-gui { padding: 12px; }
+            .calc-gui-btn { padding: 14px 4px; font-size: 1.1rem; }
+            .calc-display { font-size: 1.8rem; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="calc-container">
+    <h2>🧮 Surfer2 · 计算器</h2>
+    <div class="calc-gui">
+        <div class="calc-display" id="calcDisplay">
+            <div id="calcExpression">0</div>
+            <div class="result-area" id="calcResultArea"></div>
+        </div>
+
+        <div class="calc-gui-row">
+            <button class="calc-gui-btn clear" data-action="clear">AC</button>
+            <button class="calc-gui-btn" data-action="back">⌫</button>
+            <button class="calc-gui-btn operator" data-op="/">÷</button>
+            <button class="calc-gui-btn operator" data-op="*">×</button>
+        </div>
+        <div class="calc-gui-row">
+            <button class="calc-gui-btn" data-num="7">7</button>
+            <button class="calc-gui-btn" data-num="8">8</button>
+            <button class="calc-gui-btn" data-num="9">9</button>
+            <button class="calc-gui-btn operator" data-op="-">−</button>
+        </div>
+        <div class="calc-gui-row">
+            <button class="calc-gui-btn" data-num="4">4</button>
+            <button class="calc-gui-btn" data-num="5">5</button>
+            <button class="calc-gui-btn" data-num="6">6</button>
+            <button class="calc-gui-btn operator" data-op="+">+</button>
+        </div>
+        <div class="calc-gui-row">
+            <button class="calc-gui-btn" data-num="1">1</button>
+            <button class="calc-gui-btn" data-num="2">2</button>
+            <button class="calc-gui-btn" data-num="3">3</button>
+            <button class="calc-gui-btn equals" data-action="equals">=</button>
+        </div>
+        <div class="calc-gui-row">
+            <button class="calc-gui-btn" data-num="0">0</button>
+            <button class="calc-gui-btn" data-num=".">.</button>
+            <button class="calc-gui-btn func" data-func="sqrt">√</button>
+            <button class="calc-gui-btn func" data-func="pow">x²</button>
+        </div>
+    </div>
+    <div class="status-bar">Surfer2 Count · 支持 + - × ÷ √ x²</div>
+</div>
+
+<script>
+    (function(){
+        // ---- DOM refs ----
+        const expressionEl = document.getElementById('calcExpression');
+        const resultArea = document.getElementById('calcResultArea');
+
+        // ---- 状态 ----
+        let expr = '';          // 当前表达式字符串
+        let justEvaluated = false; // 标记是否刚刚按了等号
+
+        // ---- 更新显示 ----
+        function updateDisplay() {
+            expressionEl.textContent = expr || '0';
+        }
+
+        function setResult(text) {
+            resultArea.textContent = text;
+        }
+
+        // ---- 计算核心 ----
+        function evaluate() {
+            if (!expr) {
+                setResult('⚠️ 请输入表达式');
+                return;
+            }
+            try {
+                // 替换显示符号为 JS 可识别符号
+                let sanitized = expr
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/²/g, '**2');
+
+                // 处理 sqrt：将 √(数字) 或 √数字 转为 Math.sqrt(数字)
+                sanitized = sanitized.replace(/√\(([^)]+)\)/g, 'Math.sqrt($1)');
+                sanitized = sanitized.replace(/√(\d+\.?\d*)/g, 'Math.sqrt($1)');
+
+                // 防止恶意代码 (仅允许数字、运算符、Math.sqrt、括号、小数点)
+                // 用 Function 代替 eval 略微安全，但这里简单处理
+                const result = Function('"use strict"; return (' + sanitized + ')')();
+
+                if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+                    const strResult = String(result);
+                    // 如果结果太长，限制显示长度
+                    const displayResult = strResult.length > 20 ? strResult.slice(0, 20) + '…' : strResult;
+                    setResult('= ' + displayResult);
+                    // 将表达式更新为结果，方便继续运算
+                    expr = strResult;
+                    updateDisplay();
+                    justEvaluated = true;
+                } else {
+                    setResult('⚠️ 无效结果');
+                }
+            } catch (e) {
+                setResult('⚠️ 表达式错误');
+                console.warn('Calc error:', e.message);
+            }
+        }
+
+        // ---- 处理输入 ----
+        function handleInput(value) {
+            if (value === 'clear') {
+                expr = '';
+                setResult('');
+                justEvaluated = false;
+                updateDisplay();
+                return;
+            }
+            if (value === 'back') {
+                expr = expr.slice(0, -1);
+                setResult('');
+                justEvaluated = false;
+                updateDisplay();
+                return;
+            }
+            if (value === 'equals') {
+                evaluate();
+                return;
+            }
+            if (value === 'sqrt') {
+                expr += '√(';
+                setResult('');
+                justEvaluated = false;
+                updateDisplay();
+                return;
+            }
+            if (value === 'pow') {
+                expr += '²';
+                setResult('');
+                justEvaluated = false;
+                updateDisplay();
+                return;
+            }
+
+            // 数字或运算符
+            // 如果刚刚按了等号，且输入的是数字，则重新开始
+            if (justEvaluated && /^[0-9.]$/.test(value)) {
+                expr = '';
+                justEvaluated = false;
+                setResult('');
+            } else {
+                justEvaluated = false;
+            }
+
+            expr += value;
+            updateDisplay();
+        }
+
+        // ---- 绑定按钮事件 ----
+        // 数字按钮
+        document.querySelectorAll('.calc-gui-btn[data-num]').forEach(btn => {
+            btn.addEventListener('click', () => handleInput(btn.dataset.num));
+        });
+
+        // 运算符按钮
+        document.querySelectorAll('.calc-gui-btn[data-op]').forEach(btn => {
+            btn.addEventListener('click', () => handleInput(btn.dataset.op));
+        });
+
+        // 功能按钮
+        document.querySelector('[data-action="clear"]').addEventListener('click', () => handleInput('clear'));
+        document.querySelector('[data-action="back"]').addEventListener('click', () => handleInput('back'));
+        document.querySelector('[data-action="equals"]').addEventListener('click', () => handleInput('equals'));
+        document.querySelectorAll('.calc-gui-btn[data-func]').forEach(btn => {
+            btn.addEventListener('click', () => handleInput(btn.dataset.func));
+        });
+
+        // ---- 键盘支持 ----
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            // 数字和小数点
+            if (/^[0-9.]$/.test(key)) {
+                e.preventDefault();
+                handleInput(key);
+                return;
+            }
+            // 运算符
+            if (key === '+') { e.preventDefault(); handleInput('+'); return; }
+            if (key === '-') { e.preventDefault(); handleInput('-'); return; }
+            if (key === '*') { e.preventDefault(); handleInput('*'); return; }
+            if (key === '/') { e.preventDefault(); handleInput('÷'); return; } // 显示为 ÷
+            if (key === 'Enter' || key === '=') {
+                e.preventDefault();
+                handleInput('equals');
+                return;
+            }
+            if (key === 'Backspace') {
+                e.preventDefault();
+                handleInput('back');
+                return;
+            }
+            if (key === 'Escape') {
+                e.preventDefault();
+                handleInput('clear');
+                return;
+            }
+            if (key === '^') {
+                e.preventDefault();
+                handleInput('pow');
+                return;
+            }
+        });
+
+        // ---- 初始化 ----
+        updateDisplay();
+        setResult('');
+
+        console.log('Surfer2 Count · 计算器独立版已加载');
+    })();
+</script>
+</body>
+              </html>
