@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surfer2 - 官网</title>
+    <style>
+        /* ========== 全局重置与基础 ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0f1e;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        /* ========== 背景与亚克力层 ========== */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: radial-gradient(ellipse at 20% 50%, #1a2a4a 0%, #0a0f1e 70%);
+            background-size: cover;
+        }
+
+        .acrylic-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: rgba(10, 15, 30, 0.4);
+            backdrop-filter: blur(80px) saturate(150%);
+            -webkit-backdrop-filter: blur(80px) saturate(150%);
+            pointer-events: none;
+        }
+
+        /* ========== 主容器 ========== */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(20, 30, 50, 0.55);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-radius: 48px;
+            padding: 48px 56px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        /* ========== 头部区域 ========== */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-bottom: 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: #94a3b8;
+            margin-top: 6px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1.05rem;
+            color: #c7d2fe;
+            margin-top: 12px;
+            opacity: 0.85;
+            max-width: 600px;
+        }
+
+        /* ========== 卖点网格 ========== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 32px 0 40px 0;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            padding: 18px 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.25s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .feature-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .feature-desc {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        /* ========== 链接与按钮 ========== */
+        .action-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin: 8px 0 16px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 28px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.25s ease;
+            border: none;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.06);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .developer-credit {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .developer-credit a {
+            color: #93bbfc;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .developer-credit a:hover {
+            color: #c7d2fe;
+            text-decoration: underline;
+        }
+
+        /* ========== 版本更新记录 ========== */
+        .updates-section {
+            margin-top: 40px;
+        }
+
+        .updates-section h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #e2e8f0;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .update-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .update-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 20px;
+            padding: 20px 24px;
+            border-left: 3px solid #3b82f6;
+            transition: background 0.2s ease;
+        }
+
+        .update-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .update-card .version {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #93bbfc;
+            display: inline-block;
+            margin-right: 12px;
+        }
+
+        .update-card .version-desc {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            display: inline;
+        }
+
+        .update-card .version-detail {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-top: 6px;
+            padding-left: 4px;
+        }
+
+        .update-card .version-detail ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 4px;
+        }
+
+        .update-card .version-detail li {
+            position: relative;
+            padding-left: 18px;
+            margin-bottom: 2px;
+        }
+
+        .update-card .version-detail li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #60a5fa;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 28px 20px;
+                border-radius: 32px;
+            }
+
+            .logo {
+                font-size: 2.8rem;
+            }
+
+            .subtitle {
+                font-size: 1.0rem;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .action-links {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px 20px;
+            }
+
+            .update-card {
+                padding: 16px 18px;
+            }
+
+            .update-card .version {
+                display: block;
+                margin-bottom: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logo {
+                font-size: 2.2rem;
+            }
+
+            .container {
+                padding: 20px 16px;
+            }
+        }
+
+        /* ========== 微交互 ========== */
+        .glow-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+            animation: pulse-dot 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 背景层 ===== -->
+    <div class="bg-layer"></div>
+    <div class="acrylic-overlay"></div>
+
+    <!-- ===== 主容器 ===== -->
+    <div class="container">
+
+        <!-- ===== 头部 ===== -->
+        <header class="header">
+            <div class="logo">Surfer2</div>
+            <div class="subtitle">更懂浏览更懂你</div>
+            <div class="tagline">
+                <span class="glow-dot"></span>
+                简洁 · 安全 · 无广告 · 持续进化
+            </div>
+        </header>
+
+        <!-- ===== 卖点 ===== -->
+        <div class="features-grid">
+            <div class="feature-item">
+                <span class="feature-icon">🏠</span>
+                <div class="feature-name">简洁主页</div>
+                <div class="feature-desc">无干扰起始页</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🚫</span>
+                <div class="feature-name">无第三方广告</div>
+                <div class="feature-desc">本体纯净</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🔒</span>
+                <div class="feature-name">不上传数据</div>
+                <div class="feature-desc">本地优先</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🔄</span>
+                <div class="feature-name">持续维护</div>
+                <div class="feature-desc">活跃更新</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">⚡</span>
+                <div class="feature-name">启动迅速</div>
+                <div class="feature-desc">轻量响应</div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🧰</span>
+                <div class="feature-name">内置功能全面</div>
+                <div class="feature-desc">开箱即用</div>
+            </div>
+        </div>
+
+        <!-- ===== 行动链接 ===== -->
+        <div class="action-links">
+            <a href="https://github.com/lkjy-coding/Surfer2" target="_blank" class="btn btn-primary">📦 访问 GitHub 仓库</a>
+            <a href="https://github.com/lkjy-coding/Surfer2/issues" target="_blank" class="btn btn-outline">💬 反馈问题</a>
+        </div>
+
+        <div class="developer-credit">
+            👨‍💻 开发者 <a href="https://github.com/lkjy-coding" target="_blank">lkjy-coding</a> &nbsp;·&nbsp; 📂 <a href="https://github.com/lkjy-coding/Surfer2" target="_blank">Surfer2 源码</a>
+        </div>
+
+        <!-- ===== 版本更新记录 ===== -->
+        <section class="updates-section">
+            <h2>📜 更新记录</h2>
+            <div class="update-timeline">
+
+                <!-- 7.00.00 -->
+                <div class="update-card">
+                    <div class="version">7.00.00</div>
+                    <span class="version-desc">加固安全性</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>全面强化连接安全与数据隔离</li>
+                            <li>优化内部域名的权限控制</li>
+                            <li>提升整体安全基线</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 6.60.00 -->
+                <div class="update-card">
+                    <div class="version">6.60.00</div>
+                    <span class="version-desc">刷新增强 · 跳转拦截 · 视频播放器</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>刷新时可选择「仅刷新」或「重置 Cookie」并二次确认</li>
+                            <li>拦截所有外部链接、window.open 及表单提交，强制在新标签页打开</li>
+                            <li>新增本地视频播放器 (surfer:video)，支持拖拽上传，不上传任何数据</li>
+                            <li>surfer:homepage 添加副标题「更懂浏览更懂你」</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 6.50.00 -->
+                <div class="update-card">
+                    <div class="version">6.50.00</div>
+                    <span class="version-desc">视频播放器 · 本地化增强</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>新增 surfer:video 本地视频播放，基于 File API + &lt;video&gt;</li>
+                            <li>首页加入「更懂浏览更懂你」副标题</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 6.40.00 -->
+                <div class="update-card">
+                    <div class="version">6.40.00</div>
+                    <span class="version-desc">UI 革新 · 设置面板重构 · 公告板</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>三杠菜单整合为 Dashboard (surfer:dashboard)</li>
+                            <li>设置页面重构为侧边栏分类布局（类似 Windows Settings）</li>
+                            <li>新增 surfer:board 官方公告板</li>
+                            <li>surfer:developer 开发者工具（含崩溃日志下载）</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 6.30.00 -->
+                <div class="update-card">
+                    <div class="version">6.30.00</div>
+                    <span class="version-desc">标签页增强 · Transfer 重构</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>标签页支持高亮当前标签</li>
+                            <li>三杠菜单整合 B/P/用户/隐藏键</li>
+                            <li>surfer:transfer 会话系统完整重写</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 6.00.00 -->
+                <div class="update-card">
+                    <div class="version">6.00.00</div>
+                    <span class="version-desc">消息传递 (surfer:transfer) · 账户系统</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>新增 surfer:transfer 公共/私人会话，支持跨设备消息传递</li>
+                            <li>引入基于 GitHub 用户名的轻量账户系统</li>
+                            <li>移除废弃的 surfer:report 内部反馈系统，引导使用 GitHub Issues</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 5.20.00 -->
+                <div class="update-card">
+                    <div class="version">5.20.00</div>
+                    <span class="version-desc">可访问性 · 快捷键开关 · 高对比度</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>支持 B/P 键独立开关，避免输入冲突</li>
+                            <li>新增高对比度模式与屏幕键盘</li>
+                            <li>可设置默认搜索引擎</li>
+                            <li>所有链接默认在 Surfer2 内打开</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 5.00.00 -->
+                <div class="update-card">
+                    <div class="version">5.00.00</div>
+                    <span class="version-desc">账户系统 · 智能 AI · 反馈系统</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>引入 GitHub 账户绑定，支持 sudo 管理员</li>
+                            <li>surfer:chess 新增多难度 AI（简单/普通/困难）</li>
+                            <li>surfer:pin 需登录使用，数据按用户隔离</li>
+                            <li>surfer:report 本地反馈系统（管理员可回复）</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 4.30.00 -->
+                <div class="update-card">
+                    <div class="version">4.30.00</div>
+                    <span class="version-desc">快捷方式 · 多棋盘 · 反馈入口</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>新增 surfer:pin 快捷方式管理器（支持 P 键快速访问）</li>
+                            <li>surfer:chess 支持 3×3、5×5、18×18、25×25 多棋盘</li>
+                            <li>新增 surfer:report 引导至 GitHub Issues</li>
+                            <li>surfer:settings 中“内部域名”可点击跳转</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 4.00.00 -->
+                <div class="update-card">
+                    <div class="version">4.00.00</div>
+                    <span class="version-desc">首页登场 · 插件中心重构</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>surfer:homepage 正式上线，含搜索引擎选择与 GitHub 直达</li>
+                            <li>surfer:chajian 恢复标签页布局，移除冗余空白</li>
+                            <li>修复 EasyAbroad 浅色模式文本不可见问题</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 3.21.00 -->
+                <div class="update-card">
+                    <div class="version">3.21.00</div>
+                    <span class="version-desc">主题全面适配 · EasyAbroad 网格重构</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>surfer:chess 棋盘背景跟随主题</li>
+                            <li>surfer:translate 输入框适配浅色模式</li>
+                            <li>EasyAbroad 整体迁移至 CSS Grid，布局更整洁</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 3.00.00 -->
+                <div class="update-card">
+                    <div class="version">3.00.00</div>
+                    <span class="version-desc">Markdown 笔记 · 14 语言翻译 · 全能计算器</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>surfer:note 支持 Markdown + LaTeX（KaTeX）实时预览</li>
+                            <li>surfer:translate 支持 14 种语言，含简繁互换</li>
+                            <li>surfer:count 集成数学计算、汇率、单位换算、函数绘图</li>
+                            <li>支持语音朗读结果 (Web Speech API)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 2.00.00 -->
+                <div class="update-card">
+                    <div class="version">2.00.00</div>
+                    <span class="version-desc">内部域名系统 · Boss Key · 本地笔记</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>引入 surfer:settings、surfer:note、surfer:chess</li>
+                            <li>Boss Key (B 键) 一键跳转设置</li>
+                            <li>所有内部页面离线可用，数据存于 localStorage</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 1.20.00 -->
+                <div class="update-card">
+                    <div class="version">1.20.00</div>
+                    <span class="version-desc">主题切换 · 书签 · 黑/白名单</span>
+                    <div class="version-detail">
+                        <ul>
+                            <li>深色/浅色主题切换</li>
+                            <li>书签（收藏夹）与黑/白名单过滤</li>
+                            <li>自适应视口，UA 切换无硬重定向</li>
+                            <li>本地持久化存储所有设置</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+</body>
+  </html>
