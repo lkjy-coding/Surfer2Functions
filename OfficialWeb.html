@@ -21,7 +21,7 @@
             height: 100%;
         }
 
-        /* ========== 背景层 ========== */
+        /* ========== 背景层（质感保留） ========== */
         .bg-layer {
             position: fixed;
             top: 0;
@@ -74,6 +74,15 @@
             z-index: 1;
         }
 
+        /* ========== 滚动容器 ========== */
+        .scroll-container {
+            height: 100vh;
+            height: 100dvh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
         /* ========== 每个区块 - 滚动捕捉 ========== */
         .section {
             height: 100vh;
@@ -112,7 +121,7 @@
             transform: translateY(0);
         }
 
-        /* ========== 首屏（动态标题） ========== */
+        /* ========== 首屏（动态标题 - 已恢复） ========== */
         .hero {
             justify-content: center;
             text-align: center;
@@ -362,15 +371,6 @@
             text-decoration: underline;
         }
 
-        /* ========== 滚动容器设置 ========== */
-        .scroll-container {
-            height: 100vh;
-            height: 100dvh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
-        }
-
         /* ========== 响应式 ========== */
         @media (max-width: 768px) {
             .hero .logo { font-size: 3.6rem; }
@@ -402,7 +402,7 @@
 
         <div class="container">
 
-            <!-- ===== 首屏 ===== -->
+            <!-- ===== 首屏（动态标题已恢复） ===== -->
             <section class="section hero">
                 <div class="logo">Surfer2</div>
                 <div class="subtitle">更懂浏览更懂你</div>
@@ -684,7 +684,7 @@
             }
 
             // ========== 加载完成后补检测 ==========
-            if (document.readyState === 'complete') {
+            function checkVisibleSections() {
                 sections.forEach(section => {
                     const rect = section.getBoundingClientRect();
                     if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
@@ -694,21 +694,15 @@
                         }, delay);
                     }
                 });
+            }
+
+            if (document.readyState === 'complete') {
+                checkVisibleSections();
             } else {
-                window.addEventListener('load', function() {
-                    sections.forEach(section => {
-                        const rect = section.getBoundingClientRect();
-                        if (rect.top < window.innerHeight * 0.7 && rect.bottom > 0) {
-                            const delay = parseInt(section.dataset.delay) || 0;
-                            setTimeout(() => {
-                                section.classList.add('visible');
-                            }, delay);
-                        }
-                    });
-                });
+                window.addEventListener('load', checkVisibleSections);
             }
 
         })();
     </script>
 </body>
-                                                                                 </html>
+                                                                                                                            </html>
